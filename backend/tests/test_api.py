@@ -8,7 +8,7 @@ client = TestClient(app)
 def test_health_endpoint_returns_200():
     response = client.get("/api/health")
 
-    assert response.status_code == 500
+    assert response.status_code == 200
 
     data = response.json()
 
