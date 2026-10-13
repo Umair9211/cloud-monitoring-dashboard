@@ -12,14 +12,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Python environment
-      uses: actions/python@v5
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: "pip"
         cache-dependency-path: backend/requirements.txt
     - name: installing dependenncies
       run: |
-      python -m pip insatll --upgrade pip
+      python -m pip install --upgrade pip
       pip install -r backend/requirements.txt
     - name: running test
       run: python -m pytest -q backend/tests
