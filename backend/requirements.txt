@@ -1,0 +1,10 @@
+# requirements.txt — Cloud Monitoring Dashboard API
+
+# ASGI framework
+fastapi>=0.115.0,<1.0.0
+
+# ASGI server
+uvicorn[standard]>=0.30.0,<1.0.0
+
+# Data validation
+pydantic>=2.7.0,<3.0.0
