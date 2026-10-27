@@ -75,7 +75,19 @@ jobs:
             sudo docker compose up -d --remove-orphans
   
             echo "Checking application health..."
-            curl --fail --silent --show-error \
-              http://localhost/api/health
-  
-            echo "Deployment successful!"
+            
+            for i in $(seq 1 12); do
+              if curl --fail --silent --show-error \
+                  http://localhost/api/health; then
+                echo "Deployment successful!"
+                exit 0
+              fi
+            
+              echo "Application not ready yet. Attempt $i of 12."
+              sleep 5
+            done
+            
+            echo "Deployment failed: application did not become healthy."
+            sudo docker compose ps
+            sudo docker compose logs --tail=50
+            exit 1
