@@ -12,7 +12,7 @@ function Placeholder({ title }) {
       <header className="page-header">
         <div className="header-left">
           <div className="breadcrumb">
-            <span>CloudV1</span>
+            <span>Cloud</span>
             <span className="breadcrumb-sep">/</span>
             <span className="breadcrumb-current">{title}</span>
           </div>
