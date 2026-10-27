@@ -1,15 +1,17 @@
-name: cloud-monitor
 services:
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: umair9211/cloud-monitoring-backend:latest
+    container_name: cloud-monitoring-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    environment:
+      AWS_REGION: ap-southeast-2
+      EC2_INSTANCE_ID: i-020d55ffd221d3f0a
+
+  frontend:
+    image: umair9211/cloud-monitoring-frontend:latest
+    container_name: cloud-monitoring-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"

@@ -1,13 +1,65 @@
 """routers/metrics.py — GET /api/metrics  &  GET /api/metrics/timeseries"""
 
 import logging
+import os
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
 from backend.data.mock_data import generate_current_metrics, generate_timeseries
 from backend.models.schemas import MetricsResponse, TimeseriesResponse
+import boto3
+def get_real_cpu_utilization() -> float:
+    """Fetch the latest EC2 CPU utilization from AWS CloudWatch."""
 
+    region = os.getenv("AWS_REGION", "ap-southeast-2")
+    instance_id = os.getenv("EC2_INSTANCE_ID")
+
+    if not instance_id:
+        raise RuntimeError("EC2_INSTANCE_ID environment variable is not set.")
+
+    # Use the local AWS profile if configured.
+    # On EC2, Boto3 can use the attached IAM role automatically.
+    profile = os.getenv("AWS_PROFILE")
+
+    if profile:
+        session = boto3.Session(
+            profile_name=profile,
+            region_name=region,
+        )
+    else:
+        session = boto3.Session(region_name=region)
+
+    cloudwatch = session.client("cloudwatch")
+
+    now = datetime.now(timezone.utc)
+
+    response = cloudwatch.get_metric_statistics(
+        Namespace="AWS/EC2",
+        MetricName="CPUUtilization",
+        Dimensions=[
+            {
+                "Name": "InstanceId",
+                "Value": instance_id,
+            }
+        ],
+        StartTime=now - timedelta(hours=1),
+        EndTime=now,
+        Period=300,
+        Statistics=["Average"],
+    )
+
+    datapoints = response.get("Datapoints", [])
+
+    if not datapoints:
+        raise RuntimeError(
+            "No EC2 CPU metrics found in CloudWatch for the last hour."
+        )
+
+    latest = max(datapoints, key=lambda point: point["Timestamp"])
+
+    return round(float(latest["Average"]), 2)
 logger = logging.getLogger("Cloud.routers.metrics")
 router = APIRouter(tags=["Metrics"])
 
@@ -20,7 +72,11 @@ router = APIRouter(tags=["Metrics"])
 )
 async def current_metrics() -> JSONResponse:
     logger.debug("Current metrics called.")
-    return JSONResponse(content=generate_current_metrics())
+    metrics = generate_current_metrics()
+
+    metrics["cpu_utilization"] = get_real_cpu_utilization()
+
+    return JSONResponse(content=metrics)
 
 
 @router.get(
