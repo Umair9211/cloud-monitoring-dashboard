@@ -55,8 +55,23 @@ jobs:
     name: Deploy to EC2
     needs: build
     runs-on: ubuntu-latest
-  
+
     steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Copy Compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ec2-user/cloud-monitoring/"
+          overwrite: true
+
       - name: Deploy application
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -65,28 +80,31 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             set -e
-  
+
             cd /home/ec2-user/cloud-monitoring
-  
+
+            echo "Checking Compose file..."
+            test -f docker-compose.yml
+
             echo "Pulling latest images..."
             sudo docker compose pull
-  
+
             echo "Updating containers..."
             sudo docker compose up -d --remove-orphans
-  
+
             echo "Checking application health..."
-            
+
             for i in $(seq 1 12); do
               if curl --fail --silent --show-error \
                   http://localhost/api/health; then
                 echo "Deployment successful!"
                 exit 0
               fi
-            
+
               echo "Application not ready yet. Attempt $i of 12."
               sleep 5
             done
-            
+
             echo "Deployment failed: application did not become healthy."
             sudo docker compose ps
             sudo docker compose logs --tail=50
