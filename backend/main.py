@@ -67,20 +67,42 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 access_logger = logging.getLogger("Cloud.access")
 
 
-async def _access_log_middleware(request: Request, call_next):  # type: ignore[return]
+async def _access_log_middleware(request: Request, call_next):
+    from backend.monitoring.request_metrics import request_metrics
+
     start = time.perf_counter()
-    response = await call_next(request)
-    elapsed_ms = round((time.perf_counter() - start) * 1_000, 2)
+
+    try:
+        response = await call_next(request)
+    except Exception:
+        elapsed_ms = round(
+            (time.perf_counter() - start) * 1000, 2
+        )
+
+        if not request.url.path.startswith("/api/metrics"):
+            request_metrics.record(500, elapsed_ms)
+
+        raise
+
+    elapsed_ms = round(
+        (time.perf_counter() - start) * 1000, 2
+    )
+
+    # Don't count dashboard polling as normal application traffic.
+    if not request.url.path.startswith("/api/metrics"):
+        request_metrics.record(response.status_code, elapsed_ms)
+
     access_logger.info(
-        "%s %s → %d  (%.2f ms)",
+        "%s %s → %d (%.2f ms)",
         request.method,
         request.url.path,
         response.status_code,
         elapsed_ms,
     )
-    response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
-    return response
 
+    response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
+
+    return response
 
 # ── Status → error code map ───────────────────────────────────────────────────
 

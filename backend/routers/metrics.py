@@ -3,7 +3,7 @@
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-
+from backend.monitoring.request_metrics import request_metrics
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -72,12 +72,16 @@ router = APIRouter(tags=["Metrics"])
 )
 async def current_metrics() -> JSONResponse:
     logger.debug("Current metrics called.")
+
     metrics = generate_current_metrics()
 
+    # Real CPU utilization from AWS CloudWatch.
     metrics["cpu_utilization"] = get_real_cpu_utilization()
 
-    return JSONResponse(content=metrics)
+    # Real request statistics from our middleware.
+    metrics.update(request_metrics.snapshot())
 
+    return JSONResponse(content=metrics)
 
 @router.get(
     "/api/metrics/timeseries",
