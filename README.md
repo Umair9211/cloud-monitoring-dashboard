@@ -7,6 +7,7 @@ The project demonstrates practical cloud engineering and DevOps workflows, inclu
 **Repository:** [cloud-monitoring-dashboard](https://github.com/Umair9211/cloud-monitoring-dashboard)
 
 ## Architecture
+<img width="1376" height="768" alt="aws-cloud-monitoring" src="https://github.com/user-attachments/assets/1d51b66b-1bb2-4d10-842a-803abda57c7a" />
 
 The application follows a frontend–backend architecture deployed on Amazon EC2. Nginx acts as the reverse proxy, routing incoming requests to the appropriate service. The FastAPI backend retrieves infrastructure metrics from AWS CloudWatch and collects application-level performance statistics, which are displayed through the React dashboard.
 
@@ -95,7 +96,13 @@ This workflow provides a repeatable deployment process and reduces the need for 
 - **Deployment Verification:** Checks application health after deployment to help identify unsuccessful updates.
 
 ## Screenshots
+<img width="1274" height="719" alt="Screenshot from 2026-10-29 08-53-39" src="https://github.com/user-attachments/assets/06effecc-e289-4e8d-b437-0f9754b47c4f" />
 
+<img width="1274" height="722" alt="Screenshot from 2026-10-29 08-50-58" src="https://github.com/user-attachments/assets/97129122-d9ee-4b81-b74d-bbcd13a2f647" />
+
+<img width="1274" height="722" alt="Screenshot from 2026-10-29 08-51-32" src="https://github.com/user-attachments/assets/18361283-6e97-4b2e-acee-9de6ca5884ed" />
+
+<img width="1274" height="722" alt="Screenshot from 2026-10-29 08-52-08" src="https://github.com/user-attachments/assets/eeb56ac9-3e75-4e84-b62e-67c27dd52475" />
 
 ## Getting Started
 
